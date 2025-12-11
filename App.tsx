@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -13,6 +13,19 @@ import NoticePage from './pages/NoticePage';
 import { LanguageProvider, useLanguage } from './utils/i18n';
 import { Globe } from 'lucide-react';
 
+// Route Guard Component
+const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
+  const token = localStorage.getItem('token');
+  const location = useLocation();
+
+  if (!token) {
+    // Redirect to login, but save the current location they were trying to go to
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
+};
+
 const MainLayout: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     const { language, setLanguage } = useLanguage();
 
@@ -23,9 +36,9 @@ const MainLayout: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     return (
         <div className="flex bg-gray-50 min-h-screen">
           <Sidebar onLogout={onLogout} />
-          <div className="flex-1 ml-64">
+          <div className="flex-1 ml-64 transition-all duration-300">
              {/* Header */}
-            <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-10">
+            <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-10 shadow-sm">
                  <h2 className="text-lg font-semibold text-slate-700">Enterprise Portal</h2>
                  <div className="flex items-center space-x-4">
                      <button 
@@ -65,42 +78,30 @@ const MainLayout: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 };
 
 const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
-
-  useEffect(() => {
-    // Check if token exists in localStorage
-    const token = localStorage.getItem('token');
-    if (token) {
-      setIsAuthenticated(true);
-    }
-    setCheckingAuth(false);
-  }, []);
-
   const handleLogin = () => {
-    setIsAuthenticated(true);
+    // Force a re-render or navigation if needed, usually Router handles this via state change
+    window.location.hash = '/'; 
   };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    setIsAuthenticated(false);
+    window.location.hash = '/login';
   };
-
-  if (checkingAuth) {
-    return <div className="min-h-screen flex items-center justify-center text-slate-500">Loading...</div>;
-  }
 
   return (
     <LanguageProvider>
         <Router>
-        {!isAuthenticated ? (
             <Routes>
+                {/* Public Route */}
                 <Route path="/login" element={<Login onLogin={handleLogin} />} />
-                <Route path="*" element={<Navigate to="/login" replace />} />
+
+                {/* Protected Routes */}
+                <Route path="/*" element={
+                    <ProtectedRoute>
+                        <MainLayout onLogout={handleLogout} />
+                    </ProtectedRoute>
+                } />
             </Routes>
-        ) : (
-            <MainLayout onLogout={handleLogout} />
-        )}
         </Router>
     </LanguageProvider>
   );

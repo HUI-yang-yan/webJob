@@ -18,6 +18,13 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<Resu
       headers,
     });
 
+    if (response.status === 401) {
+        // Token expired or invalid
+        localStorage.removeItem('token');
+        window.location.hash = '/login'; // Redirect to login
+        throw new Error('Unauthorized');
+    }
+
     if (!response.ok) {
       throw new Error(`API Error: ${response.statusText}`);
     }
@@ -116,7 +123,7 @@ export const AttendanceService = {
         await delay(300);
         return { code: 200, msg: 'Success', data: { total: MOCK_ATTENDANCE_HISTORY.length, records: MOCK_ATTENDANCE_HISTORY }};
      }
-     return request('/api/attendance/list'); // Hypothetical endpoint
+     return request(`/api/attendance/list`); 
   },
   checkIn: async () => request('/api/attendance/check-in', { method: 'POST' }),
   checkOut: async () => request('/api/attendance/check-out', { method: 'POST' })

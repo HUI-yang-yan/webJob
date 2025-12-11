@@ -22,6 +22,7 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<Resu
     if (response.status === 401) {
         // Token expired or invalid
         localStorage.removeItem('token');
+        localStorage.removeItem('user'); // Clear user data too
         window.location.hash = '/login'; // Redirect to login
         throw new Error('Unauthorized');
     }
@@ -41,7 +42,23 @@ export const AuthService = {
   login: async (data: LoginDTO): Promise<Result<{ token: string, user: any }>> => {
     if (USE_MOCK_DATA) {
       await delay(500);
-      return { code: 200, msg: 'Success', data: { token: 'mock-token-123', user: { id: 1, username: 'admin', role: 'admin' } } };
+      // Simulate different roles based on username
+      const role = data.username === 'user' ? 'user' : 'admin';
+      const mockUser = {
+          id: role === 'admin' ? 1 : 99,
+          username: data.username || 'admin',
+          role: role,
+          avatar: role === 'admin' ? undefined : 'https://i.pravatar.cc/150?u=user' 
+      };
+      
+      return { 
+          code: 200, 
+          msg: 'Success', 
+          data: { 
+              token: `mock-token-${role}-123`, 
+              user: mockUser
+          } 
+      };
     }
     return request('/auth/login', { method: 'POST', body: JSON.stringify(data) });
   },
@@ -55,16 +72,63 @@ export const AuthService = {
 export const EmployeeService = {
   list: async (page: PageDTO): Promise<Result<{ total: number, records: Employee[] }>> => {
     if (USE_MOCK_DATA) {
-      await delay(400);
-      return { code: 200, msg: 'Success', data: { total: MOCK_EMPLOYEES.length, records: MOCK_EMPLOYEES } };
+      await delay(300);
+      let records = [...MOCK_EMPLOYEES];
+      
+      // Implement Mock Filtering
+      if (page.keyword) {
+          const lower = page.keyword.toLowerCase();
+          records = records.filter(e => 
+              e.empName.toLowerCase().includes(lower) || 
+              e.empNo.toLowerCase().includes(lower) ||
+              e.position.toLowerCase().includes(lower)
+          );
+      }
+      
+      return { code: 200, msg: 'Success', data: { total: records.length, records: records } };
     }
-    const query = new URLSearchParams({ page: page.page.toString(), size: page.size.toString() }).toString();
+    const query = new URLSearchParams({ page: page.page.toString(), size: page.size.toString(), ...(page.keyword && { keyword: page.keyword }) }).toString();
     return request(`/employee/list?${query}`);
   },
   add: async (data: Partial<Employee>) => {
+    if (USE_MOCK_DATA) {
+        await delay(300);
+        const newEmployee: Employee = {
+            id: MOCK_EMPLOYEES.length + 1,
+            empNo: `EMP00${MOCK_EMPLOYEES.length + 1}`,
+            empName: data.empName || 'New Employee',
+            gender: data.gender || 1,
+            mobile: data.mobile || '000-000-0000',
+            email: data.email || 'new@company.com',
+            deptId: data.deptId || 101,
+            deptName: MOCK_DEPTS.find(d => d.id == data.deptId)?.deptName || 'IT Dept',
+            position: data.position || 'Staff',
+            hireDate: new Date().toISOString().split('T')[0],
+            status: 1
+        };
+        MOCK_EMPLOYEES.unshift(newEmployee);
+        return { code: 200, msg: 'Success', data: null };
+    }
     return request('/employee', { method: 'POST', body: JSON.stringify(data) });
   },
+  update: async (id: number, data: Partial<Employee>) => {
+      if (USE_MOCK_DATA) {
+          await delay(300);
+          const idx = MOCK_EMPLOYEES.findIndex(e => e.id === id);
+          if (idx !== -1) {
+              const deptName = data.deptId ? MOCK_DEPTS.find(d => d.id == data.deptId)?.deptName : MOCK_EMPLOYEES[idx].deptName;
+              MOCK_EMPLOYEES[idx] = { ...MOCK_EMPLOYEES[idx], ...data, deptName: deptName || '' };
+          }
+          return { code: 200, msg: 'Success', data: null };
+      }
+      return request(`/employee/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  },
   delete: async (id: number) => {
+    if (USE_MOCK_DATA) {
+        const idx = MOCK_EMPLOYEES.findIndex(e => e.id === id);
+        if (idx !== -1) MOCK_EMPLOYEES.splice(idx, 1);
+        return { code: 200, msg: 'Success', data: null };
+    }
     return request(`/employee/${id}`, { method: 'DELETE' });
   }
 };
@@ -73,7 +137,7 @@ export const EmployeeService = {
 export const DeptService = {
   list: async (): Promise<Result<Dept[]>> => {
     if (USE_MOCK_DATA) {
-      await delay(300);
+      await delay(200);
       return { code: 200, msg: 'Success', data: MOCK_DEPTS };
     }
     return request('/dept/all');
@@ -84,11 +148,53 @@ export const DeptService = {
 export const ContractService = {
   list: async (page: PageDTO): Promise<Result<{ total: number, records: Contract[] }>> => {
     if (USE_MOCK_DATA) {
-      await delay(400);
-      return { code: 200, msg: 'Success', data: { total: MOCK_CONTRACTS.length, records: MOCK_CONTRACTS } };
+      await delay(300);
+      let records = [...MOCK_CONTRACTS];
+      
+      // Mock Filtering
+      if (page.status !== undefined && page.status !== -1) {
+          records = records.filter(c => c.contractStatus === page.status);
+      }
+      
+      return { code: 200, msg: 'Success', data: { total: records.length, records: records } };
     }
-    const query = new URLSearchParams({ page: page.page.toString(), size: page.size.toString() }).toString();
+    const query = new URLSearchParams({ 
+        page: page.page.toString(), 
+        size: page.size.toString(),
+        ...(page.status !== undefined ? { status: page.status.toString() } : {})
+    }).toString();
     return request(`/contract/list?${query}`);
+  },
+  add: async (data: Partial<Contract>) => {
+     if(USE_MOCK_DATA) {
+         await delay(300);
+         const newContract: Contract = {
+             id: MOCK_CONTRACTS.length + 1,
+             contractNo: `CTR-2023-00${MOCK_CONTRACTS.length + 1}`,
+             contractName: data.contractName || 'New Contract',
+             amount: data.amount || 0,
+             partyA: 'Our Company',
+             partyB: data.partyB || 'Client',
+             signDate: new Date().toISOString().split('T')[0],
+             endDate: data.endDate || new Date().toISOString().split('T')[0],
+             contractStatus: 1,
+             approvalStatus: 0
+         };
+         MOCK_CONTRACTS.unshift(newContract);
+         return { code: 200, msg: 'Success', data: null };
+     }
+     return request('/contract', { method: 'POST', body: JSON.stringify(data) });
+  },
+  update: async (id: number, data: Partial<Contract>) => {
+    if (USE_MOCK_DATA) {
+        await delay(300);
+        const idx = MOCK_CONTRACTS.findIndex(c => c.id === id);
+        if (idx !== -1) {
+            MOCK_CONTRACTS[idx] = { ...MOCK_CONTRACTS[idx], ...data };
+        }
+        return { code: 200, msg: 'Success', data: null };
+    }
+    return request(`/contract/${id}`, { method: 'PUT', body: JSON.stringify(data) });
   },
   getStats: async () => {
      if (USE_MOCK_DATA) {
@@ -169,10 +275,20 @@ export const RoleService = {
   },
   add: async (data: Partial<Role>) => {
     if (USE_MOCK_DATA) {
-        MOCK_ROLES.push({ ...data, id: MOCK_ROLES.length + 1 } as Role);
+        MOCK_ROLES.push({ ...data, id: MOCK_ROLES.length + 1, status: 1 } as Role);
         return { code: 200, msg: 'Success', data: null };
     }
     return request('/role', { method: 'POST', body: JSON.stringify(data) });
+  },
+  update: async (id: number, data: Partial<Role>) => {
+    if (USE_MOCK_DATA) {
+        const idx = MOCK_ROLES.findIndex(r => r.id === id);
+        if (idx !== -1) {
+            MOCK_ROLES[idx] = { ...MOCK_ROLES[idx], ...data };
+        }
+        return { code: 200, msg: 'Success', data: null };
+    }
+    return request(`/role/${id}`, { method: 'PUT', body: JSON.stringify(data) });
   },
   delete: async (id: number) => {
     if (USE_MOCK_DATA) {

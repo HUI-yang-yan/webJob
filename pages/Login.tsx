@@ -1,14 +1,15 @@
+
 import React, { useState } from 'react';
-import { AuthService } from '../services/api';
 import { Briefcase } from 'lucide-react';
 import { useLanguage } from '../utils/i18n';
+import { useAuth } from '../utils/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
-interface LoginProps {
-  onLogin: () => void;
-}
-
-const Login: React.FC<LoginProps> = ({ onLogin }) => {
+const Login: React.FC = () => {
   const { t } = useLanguage();
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('123456');
   const [loading, setLoading] = useState(false);
@@ -19,19 +20,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setLoading(true);
     setError('');
 
-    try {
-      const res = await AuthService.login({ username, password });
-      if (res.code === 200) {
-        localStorage.setItem('token', res.data.token);
-        onLogin();
-      } else {
-        setError(res.msg || 'Login failed');
-      }
-    } catch (err) {
-      setError('An error occurred during login');
-    } finally {
-      setLoading(false);
+    const err = await login({ username, password });
+    if (!err) {
+        navigate('/');
+    } else {
+        setError(err);
     }
+    setLoading(false);
   };
 
   return (
@@ -43,6 +38,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
           <h2 className="text-3xl font-bold text-slate-800">{t('welcomeBack')}</h2>
           <p className="text-slate-500 mt-2">{t('loginSubtitle')}</p>
+        </div>
+
+        <div className="mb-6 p-4 bg-indigo-50 rounded-lg text-sm text-indigo-700">
+            <p className="font-bold mb-1">Testing Roles:</p>
+            <p>Username: <b>admin</b> (Full Access)</p>
+            <p>Username: <b>user</b> (Limited Access)</p>
+            <p className="mt-1 text-xs opacity-70">Password: any</p>
         </div>
 
         {error && (

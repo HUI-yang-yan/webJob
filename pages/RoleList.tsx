@@ -22,13 +22,32 @@ const RoleList: React.FC = () => {
   };
 
   const handleAdd = () => {
-      setFormData({});
+      setFormData({
+          id: undefined,
+          roleName: '',
+          roleCode: '',
+          description: ''
+      });
+      setIsModalOpen(true);
+  };
+
+  const handleEdit = (role: Role) => {
+      setFormData({
+          id: role.id,
+          roleName: role.roleName,
+          roleCode: role.roleCode,
+          description: role.description
+      });
       setIsModalOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
-      await RoleService.add(formData);
+      if (formData.id) {
+          await RoleService.update(formData.id, formData);
+      } else {
+          await RoleService.add(formData);
+      }
       setIsModalOpen(false);
       fetchRoles();
   };
@@ -77,7 +96,10 @@ const RoleList: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 text-right">
                             <div className="flex items-center justify-end space-x-2">
-                                <button className="p-2 hover:bg-slate-200 rounded-full text-slate-500">
+                                <button 
+                                    onClick={() => handleEdit(role)}
+                                    className="p-2 hover:bg-slate-200 rounded-full text-slate-500"
+                                >
                                     <Edit2 className="h-4 w-4" />
                                 </button>
                                 <button onClick={() => handleDelete(role.id)} className="p-2 hover:bg-red-50 rounded-full text-red-500">
@@ -91,7 +113,7 @@ const RoleList: React.FC = () => {
         </table>
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={`${t('add')} ${t('roles')}`}>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={`${formData.id ? t('edit') : t('add')} ${t('roles')}`}>
           <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">{t('roleName')}</label>

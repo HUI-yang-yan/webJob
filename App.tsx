@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
@@ -14,14 +14,19 @@ import NoticePage from './pages/NoticePage';
 import RoleList from './pages/RoleList';
 import LeaveList from './pages/LeaveList';
 import { LanguageProvider, useLanguage } from './utils/i18n';
-import { Globe } from 'lucide-react';
+import { AuthProvider, useAuth } from './utils/AuthContext';
+import { Globe, User as UserIcon } from 'lucide-react';
 
 // Route Guard Component
 const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
-  const token = localStorage.getItem('token');
+  const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
-  if (!token) {
+  if (isLoading) {
+      return <div className="min-h-screen flex items-center justify-center text-slate-400">Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
     // Redirect to login, but save the current location they were trying to go to
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
@@ -29,8 +34,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
   return children;
 };
 
-const MainLayout: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
+const MainLayout: React.FC = () => {
     const { language, setLanguage } = useLanguage();
+    const { user } = useAuth();
 
     const toggleLanguage = () => {
         setLanguage(language === 'en' ? 'zh' : 'en');
@@ -38,7 +44,7 @@ const MainLayout: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
     return (
         <div className="flex bg-gray-50 min-h-screen">
-          <Sidebar onLogout={onLogout} />
+          <Sidebar />
           <div className="flex-1 ml-64 transition-all duration-300">
              {/* Header */}
             <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-10 shadow-sm">
@@ -53,10 +59,13 @@ const MainLayout: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                      </button>
                      <div className="h-6 w-px bg-slate-200 mx-2"></div>
                      <div className="flex items-center space-x-2">
-                        <div className="h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold">
-                            A
+                        <div className="h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold overflow-hidden">
+                            {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover"/> : (user?.username.charAt(0).toUpperCase() || 'U')}
                         </div>
-                        <span className="text-sm font-medium text-slate-600">Admin User</span>
+                        <div className="flex flex-col">
+                            <span className="text-sm font-medium text-slate-700 leading-tight">{user?.username || 'User'}</span>
+                            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">{user?.role || 'Guest'}</span>
+                        </div>
                      </div>
                  </div>
             </header>
@@ -83,31 +92,23 @@ const MainLayout: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 };
 
 const App: React.FC = () => {
-  const handleLogin = () => {
-    // Force a re-render or navigation if needed, usually Router handles this via state change
-    window.location.hash = '/'; 
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    window.location.hash = '/login';
-  };
-
   return (
     <LanguageProvider>
-        <Router>
-            <Routes>
-                {/* Public Route */}
-                <Route path="/login" element={<Login onLogin={handleLogin} />} />
+        <AuthProvider>
+            <Router>
+                <Routes>
+                    {/* Public Route */}
+                    <Route path="/login" element={<Login />} />
 
-                {/* Protected Routes */}
-                <Route path="/*" element={
-                    <ProtectedRoute>
-                        <MainLayout onLogout={handleLogout} />
-                    </ProtectedRoute>
-                } />
-            </Routes>
-        </Router>
+                    {/* Protected Routes */}
+                    <Route path="/*" element={
+                        <ProtectedRoute>
+                            <MainLayout />
+                        </ProtectedRoute>
+                    } />
+                </Routes>
+            </Router>
+        </AuthProvider>
     </LanguageProvider>
   );
 };

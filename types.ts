@@ -1,3 +1,4 @@
+
 // Generic API Response Wrapper
 export interface Result<T> {
   code: number;
@@ -106,6 +107,46 @@ export interface Notice {
   publishTime: string;
   publisherName?: string;
   noticeType: number;
+}
+
+// Role (New)
+export interface Role {
+  id: number;
+  roleName: string;
+  roleCode: string;
+  description: string;
+  status: number; // 1: Active, 0: Disabled
+  createTime: string;
+}
+
+// Permission (New)
+export interface Permission {
+  id: number;
+  permName: string;
+  permCode: string;
+  parentId: number;
+  type: number; // 1: Menu, 2: Button
+  path?: string;
+}
+
+// Leave (New)
+export interface LeaveRecord {
+  id: number;
+  userId: number;
+  userName: string;
+  leaveType: number; // 1: Sick, 2: Annual, 3: Personal
+  startTime: string;
+  endTime: string;
+  reason: string;
+  status: number; // 0: Pending, 1: Approved, 2: Rejected
+  approvalRemark?: string;
+}
+
+export interface LeaveApplyDTO {
+  leaveType: number;
+  startTime: string;
+  endTime: string;
+  reason: string;
 }
 
 // Mock Types for UI State

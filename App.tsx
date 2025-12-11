@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
@@ -10,6 +11,8 @@ import DepartmentList from './pages/DepartmentList';
 import AttendancePage from './pages/AttendancePage';
 import EquipmentList from './pages/EquipmentList';
 import NoticePage from './pages/NoticePage';
+import RoleList from './pages/RoleList';
+import LeaveList from './pages/LeaveList';
 import { LanguageProvider, useLanguage } from './utils/i18n';
 import { Globe } from 'lucide-react';
 
@@ -69,6 +72,8 @@ const MainLayout: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                 <Route path="/attendance" element={<AttendancePage />} />
                 <Route path="/equipment" element={<EquipmentList />} />
                 <Route path="/notices" element={<NoticePage />} />
+                <Route path="/roles" element={<RoleList />} />
+                <Route path="/leaves" element={<LeaveList />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </main>

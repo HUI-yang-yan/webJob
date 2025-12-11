@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 
 type Language = 'en' | 'zh';
@@ -12,10 +13,15 @@ const translations: Translations = {
   en: {
     appTitle: 'OA System',
     dashboard: 'Dashboard',
+    workspace: 'Workspace',
+    assets: 'Assets',
+    system: 'System Management',
     employees: 'Employees',
     departments: 'Departments',
+    roles: 'Roles & Permissions',
     attendance: 'Attendance',
     meetings: 'Meetings',
+    leaves: 'Leave Management',
     contracts: 'Contracts',
     equipment: 'Equipment',
     notices: 'Notices',
@@ -47,6 +53,10 @@ const translations: Translations = {
     cancel: 'Cancel',
     filter: 'Filter',
     view: 'View',
+    submit: 'Submit',
+    approve: 'Approve',
+    reject: 'Reject',
+    comment: 'Comment',
     // Entity specific
     employeeName: 'Employee Name',
     position: 'Position',
@@ -67,6 +77,15 @@ const translations: Translations = {
     room: 'Room',
     organizer: 'Organizer',
     description: 'Description',
+    roleName: 'Role Name',
+    roleCode: 'Role Code',
+    leaveType: 'Leave Type',
+    startTime: 'Start Time',
+    endTime: 'End Time',
+    reason: 'Reason',
+    myLeaves: 'My Leaves',
+    todoApprovals: 'Pending Approvals',
+    applyLeave: 'Apply for Leave',
     // Statuses
     active: 'Active',
     inactive: 'Inactive',
@@ -83,14 +102,23 @@ const translations: Translations = {
     pending: 'Pending',
     important: 'Important',
     general: 'General',
+    // Leave types
+    annual: 'Annual Leave',
+    sick: 'Sick Leave',
+    personal: 'Personal Leave'
   },
   zh: {
     appTitle: '企业OA系统',
     dashboard: '仪表盘',
+    workspace: '工作台',
+    assets: '资产管理',
+    system: '系统管理',
     employees: '员工管理',
     departments: '部门管理',
+    roles: '角色权限',
     attendance: '考勤管理',
     meetings: '会议管理',
+    leaves: '请假审批',
     contracts: '合同管理',
     equipment: '资产管理',
     notices: '公告通知',
@@ -122,6 +150,10 @@ const translations: Translations = {
     cancel: '取消',
     filter: '筛选',
     view: '查看',
+    submit: '提交',
+    approve: '通过',
+    reject: '拒绝',
+    comment: '审批意见',
     // Entity specific
     employeeName: '员工姓名',
     position: '职位',
@@ -142,6 +174,15 @@ const translations: Translations = {
     room: '会议室',
     organizer: '组织者',
     description: '描述',
+    roleName: '角色名称',
+    roleCode: '角色编码',
+    leaveType: '请假类型',
+    startTime: '开始时间',
+    endTime: '结束时间',
+    reason: '请假事由',
+    myLeaves: '我的申请',
+    todoApprovals: '待办审批',
+    applyLeave: '申请请假',
     // Statuses
     active: '正常',
     inactive: '禁用',
@@ -158,6 +199,10 @@ const translations: Translations = {
     pending: '待处理',
     important: '重要',
     general: '普通',
+    // Leave types
+    annual: '年假',
+    sick: '病假',
+    personal: '事假'
   }
 };
 

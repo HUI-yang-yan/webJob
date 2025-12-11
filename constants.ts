@@ -1,4 +1,5 @@
-import { Employee, Contract, MeetingReservation, AttendanceRecord, Notice, Dept, Equipment } from './types';
+
+import { Employee, Contract, MeetingReservation, AttendanceRecord, Notice, Dept, Equipment, Role, Permission, LeaveRecord } from './types';
 
 export const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -60,4 +61,16 @@ export const MOCK_ATTENDANCE_HISTORY: AttendanceRecord[] = [
   { id: 2, userId: 1, attendanceDate: '2023-10-26', checkInTime: '2023-10-26T09:10:00', checkOutTime: '2023-10-26T18:05:00', status: 'Late' },
   { id: 3, userId: 1, attendanceDate: '2023-10-25', checkInTime: '2023-10-25T08:50:00', checkOutTime: '2023-10-25T17:55:00', status: 'Normal' },
   { id: 4, userId: 2, attendanceDate: '2023-10-27', checkInTime: '2023-10-27T08:30:00', checkOutTime: '2023-10-27T17:30:00', status: 'Normal' },
+];
+
+export const MOCK_ROLES: Role[] = [
+  { id: 1, roleName: 'Administrator', roleCode: 'ADMIN', description: 'Full system access', status: 1, createTime: '2023-01-01T00:00:00' },
+  { id: 2, roleName: 'HR Manager', roleCode: 'HR_MGR', description: 'Manage employees and attendance', status: 1, createTime: '2023-01-05T00:00:00' },
+  { id: 3, roleName: 'Employee', roleCode: 'EMP', description: 'General access', status: 1, createTime: '2023-01-10T00:00:00' },
+];
+
+export const MOCK_LEAVES: LeaveRecord[] = [
+  { id: 1, userId: 1, userName: 'Alice Johnson', leaveType: 2, startTime: '2023-11-01T09:00:00', endTime: '2023-11-03T18:00:00', reason: 'Annual vacation', status: 1 },
+  { id: 2, userId: 3, userName: 'Charlie Brown', leaveType: 1, startTime: '2023-10-30T09:00:00', endTime: '2023-10-30T18:00:00', reason: 'Medical appointment', status: 1 },
+  { id: 3, userId: 4, userName: 'Diana Prince', leaveType: 3, startTime: '2023-11-10T09:00:00', endTime: '2023-11-10T13:00:00', reason: 'Personal matters', status: 0 },
 ];

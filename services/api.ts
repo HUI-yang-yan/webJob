@@ -1,5 +1,6 @@
-import { API_BASE_URL, USE_MOCK_DATA, MOCK_EMPLOYEES, MOCK_CONTRACTS, MOCK_MEETINGS, MOCK_ATTENDANCE, MOCK_NOTICES, MOCK_DEPTS, MOCK_EQUIPMENT, MOCK_ATTENDANCE_HISTORY } from '../constants';
-import { LoginDTO, Result, PageDTO, Employee, Contract, MeetingReservation, AttendanceRecord, Notice, Dept, Equipment } from '../types';
+
+import { API_BASE_URL, USE_MOCK_DATA, MOCK_EMPLOYEES, MOCK_CONTRACTS, MOCK_MEETINGS, MOCK_ATTENDANCE, MOCK_NOTICES, MOCK_DEPTS, MOCK_EQUIPMENT, MOCK_ATTENDANCE_HISTORY, MOCK_ROLES, MOCK_LEAVES } from '../constants';
+import { LoginDTO, Result, PageDTO, Employee, Contract, MeetingReservation, AttendanceRecord, Notice, Dept, Equipment, Role, Permission, LeaveRecord, LeaveApplyDTO } from '../types';
 
 // Helper to simulate network delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -154,4 +155,73 @@ export const NoticeService = {
       }
       return request(`/notice/list`);
   }
+};
+
+// Role Service
+export const RoleService = {
+  list: async (page: PageDTO): Promise<Result<{ total: number, records: Role[] }>> => {
+    if (USE_MOCK_DATA) {
+      await delay(300);
+      return { code: 200, msg: 'Success', data: { total: MOCK_ROLES.length, records: MOCK_ROLES } };
+    }
+    const query = new URLSearchParams({ page: page.page.toString(), size: page.size.toString() }).toString();
+    return request(`/role/list?${query}`);
+  },
+  add: async (data: Partial<Role>) => {
+    if (USE_MOCK_DATA) {
+        MOCK_ROLES.push({ ...data, id: MOCK_ROLES.length + 1 } as Role);
+        return { code: 200, msg: 'Success', data: null };
+    }
+    return request('/role', { method: 'POST', body: JSON.stringify(data) });
+  },
+  delete: async (id: number) => {
+    if (USE_MOCK_DATA) {
+        const idx = MOCK_ROLES.findIndex(r => r.id === id);
+        if (idx !== -1) MOCK_ROLES.splice(idx, 1);
+        return { code: 200, msg: 'Success', data: null };
+    }
+    return request(`/role/${id}`, { method: 'DELETE' });
+  }
+};
+
+// Leave Service
+export const LeaveService = {
+    my: async (page: PageDTO): Promise<Result<{ total: number, records: LeaveRecord[] }>> => {
+        if(USE_MOCK_DATA) {
+            await delay(300);
+            return { code: 200, msg: 'Success', data: { total: MOCK_LEAVES.length, records: MOCK_LEAVES }};
+        }
+        return request('/leave/my');
+    },
+    todo: async (page: PageDTO): Promise<Result<{ total: number, records: LeaveRecord[] }>> => {
+        if(USE_MOCK_DATA) {
+            await delay(300);
+            return { code: 200, msg: 'Success', data: { total: MOCK_LEAVES.filter(l => l.status === 0).length, records: MOCK_LEAVES.filter(l => l.status === 0) }};
+        }
+        return request('/leave/approval/todo');
+    },
+    apply: async (data: LeaveApplyDTO) => {
+        if(USE_MOCK_DATA) {
+            MOCK_LEAVES.push({ 
+                id: MOCK_LEAVES.length + 1, 
+                userId: 1, 
+                userName: 'Admin User', 
+                status: 0,
+                ...data 
+            });
+            return { code: 200, msg: 'Success', data: null };
+        }
+        return request('/leave/apply', { method: 'POST', body: JSON.stringify(data) });
+    },
+    approve: async (id: number, approved: boolean, comment: string) => {
+        if(USE_MOCK_DATA) {
+            const leave = MOCK_LEAVES.find(l => l.id === id);
+            if (leave) {
+                leave.status = approved ? 1 : 2;
+                leave.approvalRemark = comment;
+            }
+            return { code: 200, msg: 'Success', data: null };
+        }
+        return request(`/leave/approve/${id}?approved=${approved}&comment=${comment}`, { method: 'POST' });
+    }
 };

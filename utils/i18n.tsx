@@ -216,7 +216,12 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<Language>(() => {
-    return (localStorage.getItem('language') as Language) || 'en';
+    const saved = localStorage.getItem('language');
+    // Safety check: if saved value is not 'en' or 'zh', fallback to 'en'
+    if (saved === 'en' || saved === 'zh') {
+        return saved;
+    }
+    return 'en';
   });
 
   const setLanguage = (lang: Language) => {
@@ -225,7 +230,9 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const t = (key: string): string => {
-    return translations[language][key] || key;
+    // Safety check: fallback to English if current language dictionary is missing
+    const dict = translations[language] || translations['en'];
+    return dict[key] || key;
   };
 
   return (
